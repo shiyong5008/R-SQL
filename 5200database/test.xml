@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE writing [
+<!ELEMENT writing (title,author+,pubdate?)>
+<!ATTLIST writing type CDATA #REQUIRED>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT author (authorfirstname, authorlastname)>
+<!ELEMENT authorfirstname (#PCDATA)>
+<!ELEMENT authorlastname (#PCDATA)>
+<!ELEMENT pubdate (month,day,year)>
+<!ELEMENT month (#PCDATA)>
+<!ELEMENT day (#PCDATA)>
+<!ELEMENT year (#PCDATA)>
+]>
+
+<writing type = 'book'>
+  <title> The Joy of Data </title>
+  <author>
+    <authorfirstname>J.</authorfirstname>
+    <authorlastname>Datasmith</authorlastname>
+  </author>
+  <pubdate>
+    <month>12</month>
+    <day>18</day>
+    <year>2020</year>
+  </pubdate>
+</writing>

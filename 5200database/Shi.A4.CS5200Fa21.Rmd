@@ -1,0 +1,187 @@
+---
+title: "Practice SQL with {sql} Chunks for A4 MediaDB.db"
+author: "Yong Shi, NEU CS5200 Fall21"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(RSQLite)
+
+# the path below is a Windows path specification
+# on MacOS there is no c:/
+fpath = "C:/Users/Yong/Desktop/NN/way home/3s5200/New folder/databases/"
+dbfile = "MediaDB.db"
+
+dbcon <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
+```
+
+
+
+Turn on support for foreign key constraint checking
+```{sql connection=dbcon}
+PRAGMA foreign_keys = ON
+```
+
+
+
+/* 1. (5 pts) What are the last names, city, and state of all customer who made at least one purchase? */
+```{sql connection=dbcon}
+select c.LastName, c.City, c.State, count(inv.CustomerId) as purTimes
+from customers c
+left join invoices inv on c.CustomerId = inv.CustomerId
+where (select count(CustomerId) from invoices group by CustomerId) > 0
+group by c.CustomerId
+```
+
+
+
+/* 2. (5 pts) What are the titles of each albums and the artists who created it? */
+```{sql connection=dbcon}
+select a.AlbumId, a.Title, at.Name as artistName
+from albums a 
+join artists at on a.ArtistId = at.ArtistId
+```
+
+
+
+/* 3. (10 pts) What are the total number of unique customers for each country, ordered alphabetically by country who made at least one purchase? */
+```{sql connection=dbcon}
+CREATE VIEW purTimes as
+select CustomerId, count(CustomerId) as totalNum
+from invoices
+group by CustomerId
+HAVING totalNum > 0
+```
+
+```{sql connection=dbcon}
+select c.Country, count(c.CustomerId) as totalNum
+from customers c
+join purTimes p on c.CustomerId = p.CustomerId
+group by c.Country
+ORDER BY c.Country ASC
+```
+
+
+
+/* 4. (10 pts) How many customers never made a purchase, i.e., they appear in the customers table but not in the invoices table. */
+```{sql connection=dbcon}
+select count(*) from (select distinct c.LastName, c.CustomerId, inv.CustomerId
+from customers c
+left join invoices inv on c.CustomerId = inv.CustomerId
+where inv.InvoiceId is null)
+```
+
+
+
+/* 5. What are the names of the albums containing the substring "symphony" in the album title? */
+```{sql connection=dbcon}
+select AlbumId, Title
+from albums 
+where Title like '%symphony%'
+```
+
+
+
+/* 6. What are the names of all artists who performed MPEG (video or audio) tracks in either the "Brazilian Music" or the "Grunge" playlists? */
+```{sql connection=dbcon}
+select distinct ar.Name, ar.ArtistId, pl.Name, me.Name as meName
+from artists ar
+join albums al on ar.ArtistId = al.ArtistId
+join tracks tr on al.AlbumId = tr.AlbumId
+join playlist_track plt on tr.TrackId = plt.TrackId
+join playlists pl on plt.PlaylistId = pl.PlaylistId
+join media_types me on tr.MediaTypeId = me.MediaTypeId
+where pl.Name in ('Brazilian Music', 'Grunge') and me.Name like '%MPEG%'
+```
+
+
+
+/* 7. How many artists published at least 3 MPEG audio tracks? */
+```{sql connection=dbcon}
+create VIEW artMPEGautio as
+select ar.Name, ar.ArtistId, al.AlbumId, tr.MediaTypeId, me.Name as MPEGName
+from artists ar
+join albums al on ar.ArtistId = al.ArtistId
+join tracks tr on al.AlbumId = tr.AlbumId
+join media_types me on tr.MediaTypeId = me.MediaTypeId
+where me.Name = 'MPEG audio file'
+```
+
+```{sql connection=dbcon}
+select count(*)
+from (select Name, ArtistId, MPEGName, count(MPEGName) as cnt
+from artMPEGautio
+group by Name
+HAVING cnt > 2)
+```
+
+
+
+/* 8. What is the total amount of music for each genre (in hours)? List the genre and time rounded to two decimals. */
+```{sql connection=dbcon}
+select tr.GenreId, ge.Name, sum(tr.Milliseconds), round(sum(cast(tr.Milliseconds as float))/1000/60/60, 2) as sumHrs
+from tracks tr
+join genres ge on tr.GenreId = ge.GenreId
+group by tr.GenreId
+```
+
+
+
+```{r}
+dbDisconnect(dbcon)
+```
+
+
+
+
+
+/* below are my helper queries */
+```{sql connection=dbcon}
+drop view artMPEGautio
+```
+
+```{sql connection=dbcon}
+select * from artMPEGautio
+```
+
+```{sql connection=dbcon}
+CREATE TEMPORARY TABLE sumBonus AS
+select WORKER_REF_ID, sum(BONUS_AMOUNT) as sumBs from Bonus group by WORKER_REF_ID
+```
+```{sql connection=dbcon}
+select * from sumBonus
+```
+```{sql connection=dbcon}
+DROP TABLE sumBonus
+```
+
+```{sql connection=dbcon, output.var="customers.df"}
+select * from customers
+```
+
+```{sql connection=dbcon, output.var="invoices.df"}
+select * from invoices
+```
+
+```{r}
+dbListTables(dbcon)
+dbListFields(dbcon, "albums")
+dbListFields(dbcon, "tracks")
+```
+
+```{sql connection=dbcon}
+select * from tracks
+```
+
+```{sql connection=dbcon}
+select CustomerId, count(CustomerId)
+from invoices
+group by CustomerId
+```
+
+```{sql connection=dbcon}
+select * from Title
+```
+

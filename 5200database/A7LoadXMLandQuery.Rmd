@@ -1,0 +1,84 @@
+---
+title: "A7loadXMLandQuery-YongShi"
+author: "Yong Shi"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r}
+library(XML)
+
+path <- "C:/Users/Yong/Desktop/NN/way home/3s5200/week12/"
+fn <- "Books-v3.xml"
+fpn = paste0(path, fn)
+
+# load from local file
+df <- xmlToDataFrame(fpn)
+
+head(df)
+```
+
+
+```{r parseXML}
+path <- "C:/Users/Yong/Desktop/NN/way home/3s5200/week12/"
+xmlFile <- "Books-v3.xml"
+
+xmlDoc <- xmlParse(validate = F, file = paste(path,xmlFile,sep="/"))
+```
+
+
+/* 1.What are the titles of all books written by "Galos, Mike"? List the titles and the prices.*/
+```{r executeXPath1}
+xpathEx1 <- "//book[author/text() = 'Galos, Mike']/title"
+xpathEy1 <- "//book[author/text() = 'Galos, Mike']/price"
+
+x1 <- xpathSApply(xmlDoc, xpathEx1, xmlValue)
+y1 <- xpathSApply(xmlDoc, xpathEy1, xmlValue)
+
+print(paste(x1,"/",y1))
+```
+
+
+/* 2.In what genre is the book with id "bk109".*/
+```{r executeXPath2}
+xpathEx2 <- "//book[@id = 'bk109']/genre"
+
+x2 <- xpathSApply(xmlDoc, xpathEx2, xmlValue)
+
+print(paste(x2))
+```
+
+
+/* 3.What are the titles of the books that sell for the lowest price? (Use the min aggregation function)*/
+```{r executeXPath3}
+xpathEx3 <- "//book[price = min(//book/price)]/title"
+
+x3 <- xpathSApply(xmlDoc, xpathEx3, xmlValue)
+
+print(paste(x3))
+```
+
+
+/* 4.List the title and prices of all books in the "Computer" genre.*/
+```{r executeXPath4}
+xpathEx4 <- "//book[genre/text() = 'Computer']/title"
+xpathEy4 <- "//book[genre/text() = 'Computer']/price"
+
+x4 <- xpathSApply(xmlDoc, xpathEx4, xmlValue)
+y4 <- xpathSApply(xmlDoc, xpathEy4, xmlValue)
+
+print(paste(x4,"/",y4))
+```
+
+
+/* 5.What is the number of all books that cost less than $5? (Use the count aggregation function)*/
+```{r executeXPath5}
+xpathEx5 <- "count(//book[price < 5]/title)"
+
+x5 <- xpathSApply(xmlDoc, xpathEx5, xmlValue)
+
+print(paste(x5))
+```

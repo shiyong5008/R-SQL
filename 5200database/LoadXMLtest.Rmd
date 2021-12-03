@@ -1,0 +1,40 @@
+---
+title: "A7loadXMLandQuery-YongShi"
+author: "Yong Shi"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r}
+library(XML)
+
+path <- "C:/Users/Yong/Desktop/NN/way home/3s5200/week12/"
+fn <- "plants.xml"
+fpn = paste0(path, fn)
+
+# load from local file
+df <- xmlToDataFrame(fpn)
+
+head(df)
+```
+
+
+```{r parseXML}
+path <- "C:/Users/Yong/Desktop/NN/way home/3s5200/week12/"
+xmlFile <- "plants.xml"
+
+xmlDoc <- xmlParse(validate = F, file = paste(path,xmlFile,sep="/"))
+```
+
+
+
+```{r executeXPath}
+xpathEx1 <- "//PLANT[last()-1]/COMMON"
+
+x1 <- xpathSApply(xmlDoc, xpathEx1, xmlValue)
+
+print(paste(x1))
+```

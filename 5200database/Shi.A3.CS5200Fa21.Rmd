@@ -1,0 +1,162 @@
+---
+title: "Yong Shi A3 CS5200 Fall21.Rmd"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(RSQLite)
+
+fpath = "C:/Users/Yong/Desktop/NN/way home/3s5200/New folder/databases/"
+dbfile = "courseA3DB.sqlite"
+
+dbcon <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
+```
+
+```{sql connection=dbcon}
+DROP TABLE IF EXISTS Course
+```
+
+```{sql connection=dbcon}
+CREATE TABLE Course(
+  number TEXT NOT NULL,
+  title TEXT NOT NULL,
+  lengthInDays INTEGER NOT NULL,
+  PRIMARY KEY (number)
+)
+```
+
+```{sql connection=dbcon}
+SELECT * FROM Course;
+```
+
+
+```{sql connection=dbcon}
+DROP TABLE IF EXISTS Lesson
+```
+
+```{sql connection=dbcon}
+CREATE TABLE Lesson(
+  tid INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  lengthInHrs INTEGER NOT NULL,
+  subject INTEGER NOT NULL,
+  PreReqLessonId INTEGER NOT NULL,
+  PRIMARY KEY (tid),
+  FOREIGN KEY (PreReqLessonId) REFERENCES PreLesson(PreReqLessonId),
+  FOREIGN KEY (subject) REFERENCES SubjectList(subject) ON DELETE RESTRICT
+)
+```
+
+
+```{sql connection=dbcon}
+SELECT * FROM Lesson;
+```
+
+
+```{sql connection=dbcon}
+DROP TABLE IF EXISTS SubjectList
+```
+
+```{sql connection=dbcon}
+CREATE TABLE SubjectList(
+  subject INTEGER NOT NULL,
+  list TEXT NOT NULL,
+  PRIMARY KEY (subject)
+)
+```
+
+```{sql connection=dbcon}
+SELECT * FROM SubjectList;
+```
+
+
+```{sql connection=dbcon}
+DROP TABLE IF EXISTS PreLesson
+```
+
+```{sql connection=dbcon}
+CREATE TABLE PreLesson(
+  PreReqLessonId INTEGER NOT NULL,
+  tid INTEGER NOT NULL,
+  PRIMARY KEY (PreReqLessonId),
+  FOREIGN KEY (tid) REFERENCES Lesson(tid) ON DELETE RESTRICT ON UPDATE CASCADE
+)
+```
+
+```{sql connection=dbcon}
+SELECT * FROM PreLesson;
+```
+
+
+```{sql connection=dbcon}
+DROP TABLE IF EXISTS Unit
+```
+
+```{sql connection=dbcon}
+CREATE TABLE Unit (
+  number TEXT NOT NULL,
+  tid INTEGER NOT NULL,
+  PRIMARY KEY (number),
+  FOREIGN KEY (number) REFERENCES Course(number),
+  FOREIGN KEY (tid) REFERENCES Lesson(tid)
+)
+```
+
+```{sql connection=dbcon}
+SELECT * FROM Unit;
+```
+
+
+```{sql connection=dbcon}
+INSERT INTO Course (number,title,lengthInDays) VALUES 
+  ("100","CS",28),
+  ("200","ME",56),
+  ("300","IE",28),
+  ("400","QE",28);
+```
+
+
+```{sql connection=dbcon}
+INSERT INTO Lesson VALUES 
+  (3,"5200",2,1,1),
+  (2,"5008",3,2,1),
+  (1,"5001",3,3,0)
+```
+
+
+```{sql connection=dbcon}
+INSERT INTO PreLesson VALUES 
+  (3,1),
+  (2,1),
+  (1,0)
+```
+
+
+```{sql connection=dbcon}
+INSERT INTO SubjectList VALUES 
+  (1,"ML"),
+  (2,"SQL"),
+  (3,"R"),
+  (4,"java")
+```
+
+
+```{sql connection=dbcon}
+INSERT INTO Unit VALUES 
+  ("200",2),
+  ("300",3),
+  ("100",1)
+```
+
+
+```{sql connection=dbcon}
+PRAGMA foreign_keys = ON
+```
+
+
+```{r}
+dbDisconnect(dbcon)
+```
+

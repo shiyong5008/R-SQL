@@ -1,0 +1,43 @@
+---
+title: "A6BuildXML-YongShi"
+author: "Yong Shi"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r}
+library(XML)
+
+path <- "C:/Users/Yong/Desktop/NN/way home/3s5200/week12/"
+fn <- "A6BuildXML-YongShi(2).xml"
+fpn = paste0(path, fn)
+
+# load from local file
+df <- xmlToDataFrame(fpn)
+
+head(df)
+```
+
+
+```{r parseXML}
+path <- "C:/Users/Yong/Desktop/NN/way home/3s5200/week12/"
+xmlFile <- "A6BuildXML-YongShi(2).xml"
+
+xmlDoc <- xmlParse(validate = T, file = paste(path,xmlFile,sep="/"))
+```
+
+
+```{r executeXPath}
+xpathEx <- "count(//Trade[@cusip = 'GOOG'])"
+x <- xpathSApply(xmlDoc, xpathEx, xmlValue)
+
+print(paste("the Trade count of Security GOOG =",x))
+```
+
+
+
+
+

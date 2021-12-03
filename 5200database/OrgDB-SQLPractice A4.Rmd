@@ -1,0 +1,137 @@
+---
+title: "Practice SQL with {sql} Chunks for A4"
+author: "Yong Shi, NEU CS5200 Fall21"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(RSQLite)
+
+# the path below is a Windows path specification
+# on MacOS there is no c:/
+fpath = "C:/Users/Yong/Desktop/NN/way home/3s5200/New folder/databases/"
+dbfile = "orgdb.db"
+
+dbcon <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
+```
+
+Turn on support for foreign key constraint checking
+
+```{sql connection=dbcon}
+PRAGMA foreign_keys = ON
+```
+
+```{sql connection=dbcon}
+select * from Worker
+```
+
+```{sql connection=dbcon}
+select * from Bonus
+```
+
+```{sql connection=dbcon}
+select * from Title
+```
+
+```{sql connection=dbcon}
+select * from sqlite_sequence
+```
+
+/* 1. where department = 'HR' and salary > 250000 */
+```{sql connection=dbcon}
+--select distinct * from Worker
+select count(*) from Worker
+where department = 'HR'
+and salary > 250000
+```
+
+/* 2. last name join title and where earn less than average */
+```{sql connection=dbcon}
+select w.last_name, t.WORKER_TITLE, w.department, w.salary
+from Worker w join Title t on w.WORKER_ID = t.WORKER_REF_ID
+where salary < (select avg(salary) from Worker)
+```
+
+/* 3. average pay and total num group by department */
+```{sql connection=dbcon}
+select department, avg(salary) as AvgSal, count(last_name) as Num 
+from Worker w
+group by department
+```
+
+/* 4. name join title and join  VIEW or temporaty table and (salary+sumBonus)/12 */
+```{sql connection=dbcon}
+CREATE VIEW sumB as
+select WORKER_REF_ID, sum(BONUS_AMOUNT) as sumB from Bonus group by WORKER_REF_ID
+```
+```{sql connection=dbcon}
+select w.FIRST_NAME, w.last_name, t.WORKER_TITLE, w.salary, s.sumB, round((w.salary + ifnull(s.sumB,0))/12) as MonthlyComp
+from Worker w
+left join Title t on w.WORKER_ID = t.WORKER_REF_ID
+left join sumB s on w.WORKER_ID = s.WORKER_REF_ID
+```
+```{sql connection=dbcon}
+DROP VIEW sumB
+```
+
+/* 5. capital name for no bonus */
+```{sql connection=dbcon}
+select upper(w.FIRST_NAME), upper(w.last_name), b.BONUS_AMOUNT
+from Worker w
+left join Bonus b on w.WORKER_ID = b.WORKER_REF_ID
+where b.BONUS_AMOUNT is null
+```
+
+/* 6. search for manager title */
+```{sql connection=dbcon}
+select w.FIRST_NAME, w.last_name, t.WORKER_TITLE
+from Worker w 
+join Title t on w.WORKER_ID = t.WORKER_REF_ID
+where t.WORKER_TITLE like '%manager%'
+```
+
+
+```{sql connection=dbcon}
+select * from sumB
+
+```
+
+
+```{sql connection=dbcon}
+CREATE TEMPORARY TABLE sumBonus AS
+select WORKER_REF_ID, sum(BONUS_AMOUNT) as sumBs from Bonus group by WORKER_REF_ID
+```
+```{sql connection=dbcon}
+select * from sumBonus
+```
+```{sql connection=dbcon}
+DROP TABLE sumBonus
+```
+
+
+```{sql connection=dbcon, output.var="workers.df"}
+select * from Worker
+```
+
+```{r}
+print(workers.df)
+```
+
+```{r}
+sqlcmd <- "select * from Worker"
+workers.df <- dbGetQuery(con = dbcon, sqlcmd)
+print(workers.df)
+```
+
+```{r}
+dbListTables(dbcon)
+dbListFields(dbcon, "Worker")
+```
+
+
+```{r}
+dbDisconnect(dbcon)
+```
+
